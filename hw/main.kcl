@@ -1,0 +1,212 @@
+@settings(defaultLengthUnit = mm)
+@settings(defaultAngleUnit = rad)
+
+displayHeight = 208.8
+displayWidth = 284.7
+
+lipThickness = 5
+lipWidth = 10
+lipLength = 40
+
+braceThickness = 2
+braceWidth = 10
+braceLength = sqrt(pow(displayHeight, 2) + pow(displayWidth, 2)) / 2
+braceOffset = braceWidth * sqrt(2) / 2
+
+centerX = displayWidth / 2
+centerY = displayHeight / 2
+
+mountSize = 5
+mountSpacing = 25
+holeRad = 2.5 / 2
+mountThickness = 3
+
+m25Rad = (2.5 / 2) - 0.25 // Under spec so that screws will bite
+piHeight = 23
+piWidth = 58
+
+fn corner(start, orientation) {
+  cornermod = startSketchOn('XY')
+    |> startProfileAt([start[0], start[1]], %)
+    |> angledLine({
+         angle = toDegrees(orientation),
+         length = lipLength
+       }, %)
+    |> angledLine({
+         angle = toDegrees(orientation + PI / 2),
+         length = -1 * lipWidth
+       }, %)
+    |> angledLine({
+         angle = toDegrees(orientation),
+         length = -1 * (lipLength + lipWidth)
+       }, %, $edge1)
+    |> angledLine({
+         angle = toDegrees(orientation + PI / 2),
+         length = lipLength + lipWidth
+       }, %, $edge2)
+    |> angledLine({
+         angle = toDegrees(orientation),
+         length = lipWidth
+       }, %)
+    |> angledLine({
+         angle = toDegrees(orientation + PI / 2),
+         length = -lipLength
+       }, %)
+    |> close()
+    |> extrude(length = lipThickness)
+    // |> fillet({
+    // radius = 1,
+    // tags = [edge1]
+  // }, %)
+
+  return cornermod
+}
+
+fn mountingHole(start) {
+  mount = startSketchOn("XY")
+    |> startProfileAt(start, %)
+    |> xLine(mountSize, %)
+    |> yLine(-mountSize, %)
+    |> xLine(-mountSize, %)
+    |> close()
+    |> hole(circle({
+         center = [
+           start[0] + mountSize / 2,
+           start[1] - (mountSize / 2)
+         ],
+         radius = holeRad
+       }, %), %)
+    |> extrude(length = mountThickness)
+
+  return mount
+}
+
+fn brace(start) {
+  braceMod = startSketchOn('XY')
+    |> startProfileAt(start, %)
+    |> xLineTo(braceOffset, %)
+    |> line(endAbsolute = [centerX, centerY - braceOffset])
+    |> line(endAbsolute = [displayWidth - braceOffset, 0])
+    |> line(endAbsolute = [displayWidth, 0])
+    |> line(endAbsolute = [displayWidth, braceOffset])
+    |> line(endAbsolute = [centerX + braceOffset, centerY])
+    |> line(endAbsolute = [
+         displayWidth,
+         displayHeight - braceOffset
+       ])
+    |> line(endAbsolute = [displayWidth, displayHeight])
+    |> line(endAbsolute = [
+         displayWidth - braceOffset,
+         displayHeight
+       ])
+    |> line(endAbsolute = [centerX, centerY + braceOffset])
+    |> line(endAbsolute = [0 + braceOffset, displayHeight])
+    |> line(endAbsolute = [0, displayHeight])
+    |> line(endAbsolute = [0, displayHeight - braceOffset])
+    |> line(endAbsolute = [centerX - braceOffset, centerY])
+    |> line(endAbsolute = [0, braceOffset])
+    |> close()
+    |> extrude(length = braceThickness)
+  return braceMod
+}
+
+fn piMountPlate(piTR) {
+  plate = startSketchOn('XY')
+  |> startProfileAt([0, braceOffset], %)
+  |> line(end = [80.31, 57.39])
+  |> line(end = [0, 80.85])
+  |> line(endAbsolute = [0, displayHeight - braceOffset])
+  |> close()
+  |> hole(circle({
+        center = piTR,
+        radius = m25Rad
+      }, %), %)
+  |> hole(circle({
+        center = [
+          piTR[0] - piHeight, 
+          piTR[1]
+        ],
+        radius = m25Rad
+      }, %), %)
+  |> hole(circle({
+        center = [
+          piTR[0] - piHeight, 
+          piTR[1] - piWidth
+        ],
+        radius = m25Rad
+      }, %), %)
+  |> hole(circle({
+        center = [
+           piTR[0], 
+           piTR[1] - piWidth
+        ],
+        radius = m25Rad
+       }, %), %)
+  |> extrude(%, length = braceThickness)
+  return plate
+}
+
+corner001 = corner([0, 0], 0)
+mount00101 = mountingHole([0, -lipWidth])
+mount00102 = mountingHole([mountSpacing, -lipWidth])
+mount00103 = mountingHole([-lipWidth - 5, mountSize])
+mount00104 = mountingHole([
+  -lipWidth - 5,
+  mountSpacing + mountSize
+])
+
+corner002 = corner([0, displayHeight], 3 * PI / 2)
+mount00201 = mountingHole([
+  0,
+  displayHeight + lipWidth + mountSize
+])
+mount00202 = mountingHole([
+  mountSpacing,
+  displayHeight + lipWidth + 5
+])
+mount00203 = mountingHole([-lipWidth - 5, displayHeight])
+mount00204 = mountingHole([
+  -lipWidth - 5,
+  displayHeight - mountSpacing
+])
+
+corner003 = corner([displayWidth, displayHeight], PI)
+mount00301 = mountingHole([
+  displayWidth - mountSize,
+  displayHeight + lipWidth + mountSize
+])
+mount00302 = mountingHole([
+  displayWidth - mountSize - mountSpacing,
+  displayHeight + lipWidth + 5
+])
+mount00303 = mountingHole([displayWidth + lipWidth, displayHeight])
+mount00304 = mountingHole([
+  displayWidth + lipWidth,
+  displayHeight - mountSpacing
+])
+
+corner004 = corner([displayWidth, 0], PI / 2)
+mount00401 = mountingHole([displayWidth - mountSize, -lipWidth])
+mount00402 = mountingHole([
+  displayWidth - mountSize - mountSpacing,
+  -lipWidth
+])
+mount00403 = mountingHole([displayWidth + lipWidth, mountSize])
+mount00404 = mountingHole([
+  displayWidth + lipWidth,
+  mountSpacing + mountSize
+])
+
+brace001 = brace([0, 0])
+
+piPlate = piMountPlate([50, 150])
+
+// displayMock = startSketchOn(brace001, "end")
+//   |> startProfileAt([0, 0], %)
+//   |> yLine(displayHeight, %)
+//   |> xLine(displayWidth, %)
+//   |> yLine(-displayHeight, %)
+//   |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
+//   |> close()
+//   |> extrude(length = 2)
+//   |> appearance(color = '#FF8877')
