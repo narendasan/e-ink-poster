@@ -110,40 +110,66 @@ fn brace(start) {
   return braceMod
 }
 
+fn carveoutProfile(start, sketch1) {
+  carveout = startProfileAt(start, sketch1)
+    |> angledLine({
+      angle = toDegrees(PI),
+      length = 45,
+    }, %, $carve01)
+    |> angledLine({
+      angle = toDegrees(PI / 2),
+      length = 45,
+    }, %, $carve02)
+    |> close()
+  return carveout
+}
+
 fn piMountPlate(piTR) {
   plate = startSketchOn('XY')
-  |> startProfileAt([0, braceOffset], %)
-  |> line(end = [80.31, 57.39])
-  |> line(end = [0, 80.85])
-  |> line(endAbsolute = [0, displayHeight - braceOffset])
-  |> close()
-  |> hole(circle({
-        center = piTR,
-        radius = m25Rad
-      }, %), %)
-  |> hole(circle({
-        center = [
-          piTR[0] - piHeight, 
-          piTR[1]
-        ],
-        radius = m25Rad
-      }, %), %)
-  |> hole(circle({
-        center = [
-          piTR[0] - piHeight, 
-          piTR[1] - piWidth
-        ],
-        radius = m25Rad
-      }, %), %)
-  |> hole(circle({
-        center = [
-           piTR[0], 
-           piTR[1] - piWidth
-        ],
-        radius = m25Rad
-       }, %), %)
+
+  carveout001 = carveoutProfile([50, 50], plate)
+
+  plateProfile = startProfileAt([0, braceOffset], plate)
+    |> line(end = [80.31, 57.39])
+    |> line(end = [0, 80.85])
+    |> line(endAbsolute = [0, displayHeight - braceOffset])
+    |> close()
+
+  plateProfileWMounts = plateProfile
+    |> hole(circle({
+          center = piTR,
+          radius = m25Rad
+        }, %), %)
+    |> hole(circle({
+          center = [
+            piTR[0] - piHeight, 
+            piTR[1]
+          ],
+          radius = m25Rad
+        }, %), %)
+    |> hole(circle({
+          center = [
+            piTR[0] - piHeight, 
+            piTR[1] - piWidth
+          ],
+          radius = m25Rad
+        }, %), %)
+    |> hole(circle({
+          center = [
+             piTR[0], 
+             piTR[1] - piWidth
+          ],
+          radius = m25Rad
+         }, %), %)
+
+
+
+  carvedPlateProfile = plateProfileWMounts
+  |> hole(carveout001, %)
+
+  piPlate = plateProfileWMounts
   |> extrude(%, length = braceThickness)
-  return plate
+  return piPlate
 }
 
 corner001 = corner([0, 0], 0)
@@ -201,12 +227,12 @@ brace001 = brace([0, 0])
 
 piPlate = piMountPlate([50, 150])
 
-// displayMock = startSketchOn(brace001, "end")
-//   |> startProfileAt([0, 0], %)
-//   |> yLine(displayHeight, %)
-//   |> xLine(displayWidth, %)
-//   |> yLine(-displayHeight, %)
-//   |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
-//   |> close()
-//   |> extrude(length = 2)
-//   |> appearance(color = '#FF8877')
+displayMock = startSketchOn(offsetPlane('XY', offset = braceThickness))
+  |> startProfileAt([0, 0], %)
+  |> yLine(displayHeight, %)
+  |> xLine(displayWidth, %)
+  |> yLine(-displayHeight, %)
+  |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
+  |> close()
+  |> extrude(length = 2)
+  |> appearance(color = '#FF8877')
