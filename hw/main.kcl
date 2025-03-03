@@ -1,6 +1,7 @@
 @settings(defaultLengthUnit = mm)
 @settings(defaultAngleUnit = rad)
 
+
 displayHeight = 208.8
 displayWidth = 284.7
 
@@ -21,7 +22,7 @@ mountSpacing = 25
 holeRad = 2.5 / 2
 mountThickness = 3
 
-m25Rad = (2.5 / 2) - 0.25 // Under spec so that screws will bite
+m25Rad = 2.5 / 2 - 0.25 // Under spec so that screws will bite
 piHeight = 23
 piWidth = 58
 
@@ -115,93 +116,92 @@ fn brace(start) {
 fn carveoutProfile(start, rotation, sketch1) {
   carveout = startProfileAt(start, sketch1)
     |> angledLine({
-      angle = toDegrees(PI) + toDegrees(rotation),
-      length = piHeight - carveoutThickness,
-    }, %, $carve01)
+         angle = toDegrees(PI) + toDegrees(rotation),
+         length = piHeight - carveoutThickness
+       }, %, $carve01)
     |> angledLine({
-      angle = toDegrees(PI / 2) + toDegrees(rotation),
-      length = piHeight - carveoutThickness,
-    }, %, $carve02)
+         angle = toDegrees(PI / 2) + toDegrees(rotation),
+         length = piHeight - carveoutThickness
+       }, %, $carve02)
     |> close()
   return carveout
 }
 
 fn transform(id) {
-  return { translate = [0, id * (-piHeight - (carveoutThickness / 4))] }
-}
-
-fn carveOutArray(start, sketch) {
-  carveout001 = carveoutProfile([piTR[0] - piHeight + (carveoutThickness/2), piTR[1] + 10], (PI), sketch)
-    |> patternTransform2d(instances = 5, transform = transform)
-  carveout002 = carveoutProfile([piTR[0] - carveoutThickness + (carveoutThickness), piTR[1] - piHeight /2], (0), sketch)
-    |> patternTransform2d(instances = 5, transform = transform)
-  return sketch
+  return {
+    translate = [
+      0,
+      id * (-piHeight - (carveoutThickness / 4))
+    ]
+  }
 }
 
 fn piMountPlate(piTR) {
   plate = startSketchOn('XY')
-  
-  carveout001 = carveoutProfile([piTR[0] - piHeight + (carveoutThickness/2), piTR[1] + 10], (PI), plate)
+  carveout001 = carveoutProfile([
+         piTR[0] - piHeight + carveoutThickness / 2,
+         piTR[1] + 15
+       ], PI, plate)
     |> patternTransform2d(instances = 5, transform = transform)
-  carveout002 = carveoutProfile([piTR[0] - carveoutThickness + (carveoutThickness/2), piTR[1] - piHeight /2], (0), plate)
+  carveout002 = carveoutProfile([
+         piTR[0] - carveoutThickness + carveoutThickness / 2,
+         piTR[1] - piHeight / 2 + carveoutThickness / 8 + 5
+       ], 0, plate)
     |> patternTransform2d(instances = 5, transform = transform)
+
+  carveout003 = carveoutProfile([
+         piTR[0] - (2 * piHeight) + carveoutThickness / 2,
+         piTR[1] + 15 + piHeight / 2
+       ], PI, plate)
+    |> patternTransform2d(instances = 6, transform = transform)
+  carveout004 = carveoutProfile([
+         piTR[0] - piHeight - (carveoutThickness / 2),
+         (piTR[1] + carveoutThickness / 8) + 5
+       ], 0, plate)
+    |> patternTransform2d(instances = 6, transform = transform)
   // carveout003 = carveoutProfile([piTR[0] - piHeight + (carveoutThickness/2), piTR[1] - (carveoutThickness/2)  - 2*(piHeight)], (PI), plate)
 
   plateProfile = startProfileAt([0, braceOffset], plate)
-    |> line(end = [80.31, 57.39])
-    |> line(end = [0, 80.85])
+    |> line(end = [50, 36.00])
+    |> line(end = [0, 122.70])
     |> line(endAbsolute = [0, displayHeight - braceOffset])
     |> close()
 
   plateProfileWMounts = plateProfile
+    |> hole(circle({ center = piTR, radius = m25Rad }, %), %)
     |> hole(circle({
-          center = piTR,
-          radius = m25Rad
-        }, %), %)
+         center = [piTR[0] - piHeight, piTR[1]],
+         radius = m25Rad
+       }, %), %)
     |> hole(circle({
-          center = [
-            piTR[0] - piHeight, 
-            piTR[1]
-          ],
-          radius = m25Rad
-        }, %), %)
+         center = [piTR[0] - piHeight, piTR[1] - piWidth],
+         radius = m25Rad
+       }, %), %)
     |> hole(circle({
-          center = [
-            piTR[0] - piHeight, 
-            piTR[1] - piWidth
-          ],
-          radius = m25Rad
-        }, %), %)
-    |> hole(circle({
-          center = [
-             piTR[0], 
-             piTR[1] - piWidth
-          ],
-          radius = m25Rad
-         }, %), %)
-
-
+         center = [piTR[0], piTR[1] - piWidth],
+         radius = m25Rad
+       }, %), %)
 
   carvedPlateProfile = plateProfileWMounts
     |> hole(carveout001, %)
     |> hole(carveout002, %)
-    //|> hole(carveout003, %)
-
+    |> hole(carveout003, %)
+    |> hole(carveout004, %)
 
   piPlate = plateProfileWMounts
-  |> extrude(%, length = braceThickness)
+    |> extrude(%, length = braceThickness)
   return piPlate
 }
 
 corner001 = corner([0, 0], 0)
 mount00101 = mountingHole([0, -lipWidth])
 mount00102 = mountingHole([mountSpacing, -lipWidth])
+
 mount00103 = mountingHole([-lipWidth - 5, mountSize])
 mount00104 = mountingHole([
   -lipWidth - 5,
   mountSpacing + mountSize
 ])
-
 corner002 = corner([0, displayHeight], 3 * PI / 2)
 mount00201 = mountingHole([
   0,
@@ -211,12 +211,12 @@ mount00202 = mountingHole([
   mountSpacing,
   displayHeight + lipWidth + 5
 ])
+
 mount00203 = mountingHole([-lipWidth - 5, displayHeight])
 mount00204 = mountingHole([
   -lipWidth - 5,
   displayHeight - mountSpacing
 ])
-
 corner003 = corner([displayWidth, displayHeight], PI)
 mount00301 = mountingHole([
   displayWidth - mountSize,
@@ -226,58 +226,34 @@ mount00302 = mountingHole([
   displayWidth - mountSize - mountSpacing,
   displayHeight + lipWidth + 5
 ])
+
 mount00303 = mountingHole([displayWidth + lipWidth, displayHeight])
 mount00304 = mountingHole([
   displayWidth + lipWidth,
   displayHeight - mountSpacing
 ])
-
 corner004 = corner([displayWidth, 0], PI / 2)
 mount00401 = mountingHole([displayWidth - mountSize, -lipWidth])
 mount00402 = mountingHole([
   displayWidth - mountSize - mountSpacing,
   -lipWidth
 ])
+
 mount00403 = mountingHole([displayWidth + lipWidth, mountSize])
+
 mount00404 = mountingHole([
   displayWidth + lipWidth,
   mountSpacing + mountSize
 ])
-
 brace001 = brace([0, 0])
-
 piPlate = piMountPlate([45, 150])
 
 displayMock = startSketchOn(offsetPlane('XY', offset = braceThickness))
-  |> startProfileAt([0, 0], %)
-  |> yLine(displayHeight, %)
-  |> xLine(displayWidth, %)
-  |> yLine(-displayHeight, %)
-  |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
-  |> close()
-  |> extrude(length = 2)
-  |> appearance(color = '#FF8877')displayMock = startSketchOn(offsetPlane('XY', offset = braceThickness))
-  |> startProfileAt([0, 0], %)
-  |> yLine(displayHeight, %)
-  |> xLine(displayWidth, %)
-  |> yLine(-displayHeight, %)
-  |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
-  |> close()
-  |> extrude(length = 2)
-  |> appearance(color = '#FF8877')displayMock = startSketchOn(offsetPlane('XY', offset = braceThickness))
-  |> startProfileAt([0, 0], %)
-  |> yLine(displayHeight, %)
-  |> xLine(displayWidth, %)
-  |> yLine(-displayHeight, %)
-  |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
-  |> close()
-  |> extrude(length = 2)
-  |> appearance(color = '#FF8877')displayMock = startSketchOn(offsetPlane('XY', offset = braceThickness))
-  |> startProfileAt([0, 0], %)
-  |> yLine(displayHeight, %)
-  |> xLine(displayWidth, %)
-  |> yLine(-displayHeight, %)
-  |> line(endAbsolute = [profileStartX(%), profileStartY(%)])
-  |> close()
-  |> extrude(length = 2)
-  |> appearance(color = '#FF8877')
+|> startProfileAt([0, 0], %)
+|> yLine(displayHeight, %)
+|> xLine(displayWidth, %)
+|> yLine(-displayHeight, %)
+|> line(endAbsolute = [profileStartX(%), profileStartY(%)])
+|> close()
+|> extrude(length = 2)
+|> appearance(color = '#FF8877')
