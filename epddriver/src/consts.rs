@@ -1,0 +1,2 @@
+const DISPLAY_WIDTH: u32 = 1200;
+const DISPLAY_HEIGHT: u32 = 1600;

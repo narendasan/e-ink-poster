@@ -1,0 +1,9 @@
+[package]
+name = "example-rpi5-test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+epddriver = { path = "../.." }
+embedded-hal = { version = "0.2.6", features = ["embedded-hal"] }
+rppal = { version = "0.14.0", features = ["gpio", "spi"] }

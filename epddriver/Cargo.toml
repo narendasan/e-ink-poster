@@ -1,0 +1,15 @@
+[package]
+name = "epddriver"
+version = "0.1.0"
+edition = "2024"
+license = "NCSA"
+keywords = ["embedded-hal"]
+
+[dependencies]
+rp2040-hal = "0.11.0"
+rp2040-pac = "0.6.0"
+anyhow = { version = "1.0", default-features = false }
+slog = "2.7.0"
+
+[features]
+rpi5 = []
